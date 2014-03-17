@@ -75,32 +75,12 @@ def mainProcess(request):
                     return HttpResponse(json.dumps(responseAll), content_type="application/json")
                 brandCates = theBrand[0].brandsCates;
                 if( len( brandCates )<=0 ):
-                    responseAll["RetCode"] = "Ret_ERROR_NoneCategory";
+                    responseAll["RetCode"] = "Ret_ERROR_NoneStarProduct";
                     return HttpResponse(json.dumps(responseAll), content_type="application/json")
                 responseAll["Items"] = aItem 
                 responseAll["RetCode"] = "Ret_OK";
             return HttpResponse(json.dumps(responseAll), content_type="application/json")
-        elif (typeId == "4"): #品牌主卡(L1Brand) ->子卡(Brand_ClassicSerial)
-            brand = request.GET.get("brand","");
-            if(brand == ""):
-                responseAll["RetCode"] = "Ret_ERROR_Brand";
-                return HttpResponse(json.dumps(responseAll), content_type="application/json")
-            else:
-                brand = brand.encode("utf8")
-                brand = urllib.quote(brand)
-                aItem = {}
-                theBrand = C_Brand.objects.filter(brandName = brand)
-                if((theBrand == None) or (len(theBrand) == 0)):
-                    responseAll["RetCode"] = "Ret_ERROR_BrandNotFound";
-                    return HttpResponse(json.dumps(responseAll), content_type="application/json")
-                brandsSerial = theBrand[0].brandsSerial;
-                if(len( brandsSerial )<=0 ):
-                    responseAll["RetCode"] = "Ret_ERROR_NoneProductItems";
-                    return HttpResponse(json.dumps(responseAll), content_type="application/json")
-                responseAll["Items"] = aItem 
-                responseAll["RetCode"] = "Ret_OK";
-            return HttpResponse(json.dumps(responseAll), content_type="application/json")
-        elif (typeId == "5"): #品牌主卡(L1Brand) ->子卡(L2Brand_ProductItem) 
+        elif (typeId == "4"): #品牌主卡(L1Brand) ->子卡(L2Brand_SimilarProduct) 
             brand = request.GET.get("brand","");
             if(brand == ""):
                 responseAll["RetCode"] = "Ret_ERROR_Brand";
@@ -113,9 +93,9 @@ def mainProcess(request):
                 if((theBrand == None) or (len(theBrand) == 0)):
                     responseAll["RetCode"] = "Ret_ERROR_BrandNotFound";
                     return HttpResponse(json.dumps(responseAll), content_type="application/json")
-                ProductItems = theBrand[0].brandsProductItems;
-                if(len(ProductItems)<=0 ):
-                    responseAll["RetCode"] = "Ret_ERROR_NoneProductItems";
+                brandCates = theBrand[0].brandsProductItems;
+                if(len(brandCates)<=0 ):
+                    responseAll["RetCode"] = "Ret_ERROR_NoneStarProduct";
                     return HttpResponse(json.dumps(responseAll), content_type="application/json")
                 responseAll["Items"] = aItem 
                 responseAll["RetCode"] = "Ret_OK";

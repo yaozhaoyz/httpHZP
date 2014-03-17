@@ -9,5 +9,6 @@ urlpatterns = patterns('',
     # url(r'^blog/', include('blog.urls')),
 
     #url(r'^admin/', include(admin.site.urls)),
-    url(r'^hzp/', 'hzp.kgapp.views.test'),
+    url(r'^test/', 'hzp.kgapp.views.test'),
+    url(r'^main/', 'hzp.kgapp.views.mainProcess'),
 )

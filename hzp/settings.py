@@ -26,6 +26,9 @@ TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
+TEMPLATE_DIRS = (
+    '/disk1/hzpDjango/hzp/hzp/template' ,
+    )
 
 # Application definition
 
@@ -36,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'hzp.kgapp',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -62,6 +66,8 @@ DATABASES = {
     }
 }
 
+DBNAME = 'hzpDB'
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
@@ -80,3 +86,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+URL_PREFIX = 'http://115.28.9.133:8088'
