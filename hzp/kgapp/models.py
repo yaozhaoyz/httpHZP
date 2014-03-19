@@ -6,27 +6,36 @@ from django.forms.widgets import *
 from django.http import HttpResponse
 
 connect(DBNAME)
+class Pid(Document):
+    pid = IntField(required=True)
 
 # Create your models here.
 class C_Brand(Document):
-    brandId = IntField(required=True);
+    brandId = IntField();
     brandName=StringField(required=True);
     brandsCates=ListField();
     brandsStarProduct=ListField();
     brandsProductItems=ListField();# stroe the product id.
-    brandsAge=DictField();
+    brandsAge=DictField();# statistic five period
     brandsSerial=DictField();
+    brandPlace = StringField();
+    brandBirthday = StringField();
+    brandGuanwang = StringField();
+    brandImg = StringField();
+    brandJieshao = StringField();
 
 class C_Product(Document):
-    ProductId = IntField(required=True);
+    ProductId = IntField();
     ProductName = StringField(required=True);
     ProductCategory = StringField(required=True)
     ProductAge = DictField(); # five period
     ProductGongxiao = ListField();
     ProductPLScore = FloatField();
     ProductJieshao = StringField();
+    ProductSkin = ListField();
     ProductUsage=StringField();
     ProductImgURL = StringField();
+    ProductLinkURL= StringField();
 
 class C_Category(Document):
     categoryId= IntField(required=True);
