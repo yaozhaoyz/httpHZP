@@ -1,0 +1,19 @@
+<html>
+  <head>
+  </head> 
+  <body>
+    <h1>品牌主搜</h1>
+    <form method="get" action="http://115.28.9.133:8088/hzp/main/">
+      {% csrf_token %}
+      <ul>
+        <li>
+          <input type="text" class="brand" name="brand"  placeholder="query" required>
+          <input type="hidden" class="fromcard" name="fromcard"  value="MainSearch"> 
+          <input type="hidden" class="tocard" name="tocard"  value="L1Brand"> 
+          <input type="hidden" class="typeId" name="typeId"  value="1"> 
+          <input type="submit" class="search" value="搜索">
+        </li>
+      </ul>
+    </form>
+ </body>
+</html>

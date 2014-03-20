@@ -108,9 +108,14 @@ def importData2Product(request):
         productId = len(Pid.objects)
         aProduct = C_Product(ProductId = productId)
         aProduct.ProductName= p;
+        aProduct.ProductImgURL = line[18].strip();
+        aProduct.ProductDaPei = line[19].strip();
         aProduct.ProductCategory= c;
+        aProduct.ProductBrand = b;
         aProduct.ProductAge= {};
         aProduct.ProductGongxiao = [];
+        aProduct.ProducePrice = p_jiage[p];
+        aProduct.ProduceScore = p_score[p];
         for i in p_gongxiao[p].split(" "):
             if(i != ""):
                 aProduct.ProductGongxiao.append(i);
@@ -119,8 +124,7 @@ def importData2Product(request):
         except:
             aProduct.ProductPLScore = 0.0
         aProduct.ProductJieshao = p_jieshao[p];
-        aProduct.ProductUsage = ""; 
-        aProduct.ProductImgURL = ""; 
+        aProduct.ProductUsage = line[12].strip();
         aProduct.ProductLinkURL = p_link[p] 
         age_str = line[10].replace("20以下","20below")
         age_str = age_str.replace("20-25岁","25below")
@@ -169,7 +173,7 @@ def importData2Product(request):
                 count_age_5[b] += 1 
             aProduct.ProductAge["45below"] = p_age_5[b];
         aProduct.save();
-        responseAll["Product"] += aProduct.ProductName+";"
+        #responseAll["Product"] += aProduct.ProductName+";"
     responseAll["Brand"] = []
     for line in open("/disk1/hzpDjango/data/brand.dat"):
         line = line.strip().split("");
@@ -201,6 +205,10 @@ def importData2Product(request):
     responseAll["ProductNum"]=len(C_Product.objects)
     return HttpResponse(json.dumps(responseAll), content_type="application/json") 
 
+def brandSearch(request):
+    if(request.method == 'GET'):
+        return render_to_response('brandMain.html',{}, context_instance=RequestContext(request))
+
 def mainProcess(request):
     if(request.method == 'GET'):
         responseAll = {} 
@@ -216,17 +224,37 @@ def mainProcess(request):
                 responseAll["RetCode"] = "Ret_ERROR_Brand";
                 return HttpResponse(json.dumps(responseAll), content_type="application/json")
             else:
-                brand_raw = urllib2.unquote(brand) # now,it is utf8
-                brand = urllib2.quote(brand_raw.encode("utf8"))
+                brand_raw = urllib2.unquote(brand).encode("utf8") # now,it is utf8
+                brand = urllib2.quote(brand_raw)
                 aItem = {}
                 aItem["BrandName"] = brand_raw;
                 aItem["StarProduct"] = str(URL_PREFIX)+"/hzp/main/?fromcard=L1Brand&tocard=L2Brand_StarProduct&typeId=2&brand="+brand;
                 aItem["CategoryList"]= str(URL_PREFIX)+"/hzp/main/?fromcard=L1Brand&tocard=L2Brand_Category&typeId=3&brand="+brand;
                 aItem["ClassicSerial"]= str(URL_PREFIX)+"/hzp/main/?fromcard=L1Brand&tocard=L2Brand_ClassicSerial&typeId=4&brand="+brand;
-                aItem["SimilarProduct"]= str(URL_PREFIX)+ "/hzp/main/?fromcard=L1Brand&tocard=L2Brand_SimilarProduct&typeId=5"+brand;
+                aItem["brandsProductItems"]= str(URL_PREFIX)+ "/hzp/main/?fromcard=L1Brand&tocard=L2Brand_brandsProductItems&typeId=5&brand="+brand;
                 responseAll["Items"] = aItem 
                 responseAll["RetCode"] = "Ret_OK";
-            return HttpResponse(json.dumps(responseAll), content_type="application/json")
+                theBrand = C_Brand.objects.filter(brandName = brand_raw)
+                if((theBrand == None) or (len(theBrand) == 0)):
+                    responseAll["RetCode"] = "Ret_ERROR_BrandNotFound";
+                    return HttpResponse(json.dumps(responseAll), content_type="application/json")
+                aBrand =  theBrand[0]
+                pre= "<html><head><title>品牌主卡L1Brand</title>"
+                suf= "</head></html>"
+                out = pre;
+                out += "<li><img src=\""+aBrand.brandImg.encode("utf8")+"\"></img></li>"
+                out += "<li><a>品牌名："+aItem["BrandName"]+"</a></li>"
+                out += "<li><a>发源地："+aBrand.brandPlace.encode("utf8")+"</a></li>"
+                out += "<li><a>起源于："+aBrand.brandBirthday.encode("utf8")+"</a></li>"
+                out += "<li><a>官网："+aBrand.brandGuanwang.encode("utf8")+"</a></li>"
+                out += "<li><a>品牌介绍："+aBrand.brandJieshao.encode("utf8")+"</a></li>"
+                out += "<li><a href=\""+aItem["StarProduct"]+"\">明星产品</a></li>"
+                out += "<li><a href=\""+aItem["CategoryList"]+"\">产品类目</a></li>"
+                out += "<li><a href=\""+aItem["ClassicSerial"]+"\">经典系列</a></li>"
+                out += "<li><a href=\""+aItem["brandsProductItems"]+"\">产品大全</a></li>"
+                out += suf;
+                return HttpResponse(out)
+#return HttpResponse(json.dumps(responseAll), content_type="application/json")
         elif (typeId == "2"): #品牌主卡(L1Brand) ->子卡(L2Brand_StarProduct) 
             brand = request.GET.get("brand","");
             if(brand == ""):
@@ -263,6 +291,14 @@ def mainProcess(request):
                     responseAll["RetCode"] = "Ret_ERROR_NoneCategory";
                     return HttpResponse(json.dumps(responseAll), content_type="application/json")
                 responseAll["Items"] = brandCates  
+                pre= "<html><head><title>品牌类目L1BrandCate</title>"
+                suf= "</head></html>"
+                out = pre;
+                out += "<br>品牌类目L1Brand_Category_Product</br>"
+                for i in brandCates:
+                    out += "<li><a href=\""+"http://115.28.9.133:8088/hzp/main/?fromcard=L2Brand_Category&tocard=L1Brand_Category_Product&typeId=9&cate="+i.encode("utf8")+"&brand="+brand+"\">"+i.encode("utf8")+"</a></li>"
+                out += suf
+                return HttpResponse(out)
                 responseAll["RetCode"] = "Ret_OK";
             return HttpResponse(json.dumps(responseAll), content_type="application/json")
         elif (typeId == "4"): #品牌主卡(L1Brand) ->子卡(Brand_ClassicSerial)
@@ -285,26 +321,122 @@ def mainProcess(request):
                 responseAll["Items"] = aItem 
                 responseAll["RetCode"] = "Ret_OK";
             return HttpResponse(json.dumps(responseAll), content_type="application/json")
-        elif (typeId == "5"): #品牌主卡(L1Brand) ->子卡(L2Brand_ProductItem) 
+        elif (typeId == "5"):#romcard=L1Brand&tocard=L2Brand_ProductItem&brand=兰蔻&typeId=5  
             brand = request.GET.get("brand","");
             if(brand == ""):
-                responseAll["RetCode"] = "Ret_ERROR_Brand";
+                responseAll["RetCode"] = "Ret_ERROR_productId";
                 return HttpResponse(json.dumps(responseAll), content_type="application/json")
             else:
                 brand = brand.encode("utf8")
-                brand = urllib2.quote( brand )
-                aItem = {}
-                theBrand = C_Brand.objects.filter(brandName = brand)
-                if((theBrand == None) or (len(theBrand) == 0)):
-                    responseAll["RetCode"] = "Ret_ERROR_BrandNotFound";
+                theProduct = C_Product.objects.filter(ProductBrand = brand)
+                if((theProduct == None) or (len(theProduct) == 0)):
+                    responseAll["RetCode"] = "Ret_ERROR_ProductNotFound";
                     return HttpResponse(json.dumps(responseAll), content_type="application/json")
-                ProductItems = theBrand[0].brandsProductItems;
-                if(len(ProductItems)<=0 ):
-                    responseAll["RetCode"] = "Ret_ERROR_NoneProductItems";
-                    return HttpResponse(json.dumps(responseAll), content_type="application/json")
-                responseAll["Items"] = aItem 
+                pre= "<html><head><title>产品详情</title>"
+                suf= "</head></html>"
+                out = pre;
+                out += "<br>产品详情</br>"
+                out += "<br></br>"
+                for i in theProduct:
+                    out += "<li><img src=\""+str(i.ProductImgURL.strip())+"\"></img></li>"
+                    out += "<li><a>Name: "+str(i.ProductName.encode("utf8"))+"</a></li>"
+                    out += "<li><a>漂亮指数: "+str(i.ProductPLScore)+"<a></li>"
+                    out += "<li><a>链接地址: "+str(i.ProductLinkURL)+"</a></li>"
+                    out += "<li><a>产品介绍: "+str(i.ProductJieshao.encode("utf8"))+"</a></li>"
+                    out += "<li><a>适合肤质: "
+                    for j in i.ProductSkin:
+                        out += str(j)+" "
+                    out += "</a></li>"
+                    if(i.ProductPrice != None):
+                        out += "<li><a>价格: "+str(i.ProductPrice.encode("utf8"))+"</a></li>"
+                    if(i.ProductScore!= None):
+                        out += "<li><a>综合评价: "+str(i.ProductScore.encode("utf8"))+"</a></li>"
+                    #out += "<li><a>适合年龄: "+str(i.ProductAge)+"</a></li>"
+                    if(i.ProductUsage!= None):
+                        out += "<li><a>使用方法: "+str(i.ProductUsage.encode("utf8"))+"</a></li>"
+                    if(i.ProductDaPei!= None):
+                        out += "<li><a>最佳搭配: "+str(i.ProductDaPei.encode("utf8"))+"</a></li>"
+                out += suf
+                return HttpResponse(out)
                 responseAll["RetCode"] = "Ret_OK";
-            return HttpResponse(json.dumps(responseAll), content_type="application/json")
+        elif (typeId == "9"):#romcard=L1Brand&tocard=L2Brand_ProductItem&brand=兰蔻&typeId=5  
+            brand = request.GET.get("brand","");
+            cate = request.GET.get("cate","");
+            if((brand == "")or(cate =="")):
+                responseAll["RetCode"] = "Ret_ERROR_productId";
+                return HttpResponse(json.dumps(responseAll), content_type="application/json")
+            else:
+                brand = brand.encode("utf8")
+                cate = cate.encode("utf8")
+                theProduct = C_Product.objects.filter(ProductBrand=brand,ProductCategory=cate)
+                if((theProduct == None) or (len(theProduct) == 0)):
+                    responseAll["RetCode"] = "Ret_ERROR_ProductNotFound";
+                    return HttpResponse(json.dumps(responseAll), content_type="application/json")
+                pre= "<html><head><title>产品列表</title>"
+                suf= "</head></html>"
+                out = pre;
+                out += "<br>产品详情</br>"
+                out += "<br></br>"
+                for i in theProduct:
+                    out += "<li><img src=\""+str(i.ProductImgURL.strip())+"\"></img></li>"
+                    out += "<li><a>Name: "+str(i.ProductName.encode("utf8"))+"</a></li>"
+                    out += "<li><a>漂亮指数: "+str(i.ProductPLScore)+"<a></li>"
+                    out += "<li><a>链接地址: "+str(i.ProductLinkURL)+"</a></li>"
+                    out += "<li><a>产品介绍: "+str(i.ProductJieshao.encode("utf8"))+"</a></li>"
+                    out += "<li><a>适合肤质: "
+                    for j in i.ProductSkin:
+                        out += str(j)+" "
+                    out += "</a></li>"
+                    if(i.ProductPrice != None):
+                        out += "<li><a>价格: "+str(i.ProductPrice.encode("utf8"))+"</a></li>"
+                    if(i.ProductScore!= None):
+                        out += "<li><a>综合评价: "+str(i.ProductScore.encode("utf8"))+"</a></li>"
+                    #out += "<li><a>适合年龄: "+str(i.ProductAge)+"</a></li>"
+                    if(i.ProductUsage!= None):
+                        out += "<li><a>使用方法: "+str(i.ProductUsage.encode("utf8"))+"</a></li>"
+                    if(i.ProductDaPei!= None):
+                        out += "<li><a>最佳搭配: "+str(i.ProductDaPei.encode("utf8"))+"</a></li>"
+                out += suf
+                return HttpResponse(out)
+                responseAll["RetCode"] = "Ret_OK";
+        
+        elif (typeId == "10"):#romcard=L1Brand&tocard=L2Brand_ProductItem&brand=兰蔻&typeId=5  
+            productId = request.GET.get("productId","");
+            if(productId == ""):
+                responseAll["RetCode"] = "Ret_ERROR_productId";
+                return HttpResponse(json.dumps(responseAll), content_type="application/json")
+            else:
+                theProduct = C_Product.objects.filter(ProductId = productId)
+                if((theProduct == None) or (len(theProduct) == 0)):
+                    responseAll["RetCode"] = "Ret_ERROR_ProductNotFound";
+                    return HttpResponse(json.dumps(responseAll), content_type="application/json")
+                pre= "<html><head><title>产品详情</title>"
+                suf= "</head></html>"
+                out = pre;
+                out += "<br>产品详情</br>"
+                out += "<br></br>"
+                for i in theProduct:
+                    out += "<li><img src=\""+str(i.ProductImgURL.strip())+"\"></img></li>"
+                    out += "<li><a>Name: "+str(i.ProductName.encode("utf8"))+"</a></li>"
+                    out += "<li><a>漂亮指数: "+str(i.ProductPLScore)+"<a></li>"
+                    out += "<li><a>链接地址: "+str(i.ProductLinkURL)+"</a></li>"
+                    out += "<li><a>产品介绍: "+str(i.ProductJieshao.encode("utf8"))+"</a></li>"
+                    out += "<li><a>适合肤质: "
+                    for j in i.ProductSkin:
+                        out += str(j)+" "
+                    out += "</a></li>"
+                    if(i.ProductPrice != None):
+                        out += "<li><a>价格: "+str(i.ProductPrice.encode("utf8"))+"</a></li>"
+                    if(i.ProductScore!= None):
+                        out += "<li><a>综合评价: "+str(i.ProductScore.encode("utf8"))+"</a></li>"
+                    #out += "<li><a>适合年龄: "+str(i.ProductAge)+"</a></li>"
+                    if(i.ProductUsage!= None):
+                        out += "<li><a>使用方法: "+str(i.ProductUsage.encode("utf8"))+"</a></li>"
+                    if(i.ProductDaPei!= None):
+                        out += "<li><a>最佳搭配: "+str(i.ProductDaPei.encode("utf8"))+"</a></li>"
+                out += suf
+                return HttpResponse(out)
+                responseAll["RetCode"] = "Ret_OK";
         else:
             responseAll["RetCode"] = "Ret_ERROR_TypeId_WRONG";
             return HttpResponse(json.dumps(responseAll), content_type="application/json")

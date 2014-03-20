@@ -11,5 +11,6 @@ urlpatterns = patterns('',
     #url(r'^admin/', include(admin.site.urls)),
     url(r'^test/', 'hzp.kgapp.views.test'),
     url(r'^main/', 'hzp.kgapp.views.mainProcess'),
+    url(r'^brandSearch/', 'hzp.kgapp.views.brandSearch'),
     url(r'^import/', 'hzp.kgapp.views.importData2Product'),
 )

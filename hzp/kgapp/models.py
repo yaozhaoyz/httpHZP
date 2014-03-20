@@ -27,15 +27,19 @@ class C_Brand(Document):
 class C_Product(Document):
     ProductId = IntField();
     ProductName = StringField(required=True);
-    ProductCategory = StringField(required=True)
+    ProductPrice = StringField();
+    ProductCategory = StringField()
+    ProductBrand = StringField()
     ProductAge = DictField(); # five period
     ProductGongxiao = ListField();
+    ProductScore = StringField(); # 
     ProductPLScore = FloatField();
     ProductJieshao = StringField();
     ProductSkin = ListField();
     ProductUsage=StringField();
     ProductImgURL = StringField();
     ProductLinkURL= StringField();
+    ProductDaPei = StringField();
 
 class C_Category(Document):
     categoryId= IntField(required=True);
